@@ -32,8 +32,7 @@ public class Scheduler {
         final Resource systemResource = new Resource(1024, 2, 1, 1, 2);
         final FCFS fcfs = new FCFS();
         final RR rr = new RR();
-
-
+       
         // Pointer
         Process ongoing = null;
         int loopTimer = -1;
@@ -88,6 +87,13 @@ public class Scheduler {
                     processQueue.get(ongoing.priority()).remove(ongoing);
                     ongoing = null;
                 }
+            }
+            
+            // Yavaşça yazdırmak için Thread.sleep
+            try {
+                Thread.sleep(200); // 100 milisaniye bekleyin
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
