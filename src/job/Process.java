@@ -1,5 +1,5 @@
 package job;
-//deneme
+
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -11,10 +11,12 @@ public class Process {
     private final static int MAX_MEMORY_REAL_TIME_PROCESS = 64;
     private final static int MAX_MEMORY_USER_PROCESS = 960;
 
+    // İşlem zaman aşımını kontrol eden metod
     public boolean isTimeout(int timer) {
         return timer - startedAt >= TIMEOUT;
     }
 
+    // İşlem durumunu belirleyen enum
     public enum Status {
         ACCEPTED,
         QUEUED,
@@ -30,15 +32,19 @@ public class Process {
     private int elapsedTime;
     private final Resource resource;
     private Status status = Status.ACCEPTED;
+    private final String color;
 
+    // Process sınıfının yapıcı metodları
     public Process(int id, int startedAt, int priority, int elapsedTime, Resource resource) {
         this.id = id;
         this.startedAt = startedAt;
         this.priority = priority;
         this.elapsedTime = elapsedTime;
         this.resource = resource;
+        this.color = Color.getRandomColor(id % 7); // Renk atanıyor
     }
 
+    // Getter metodlar
     public int id() {
         return id;
     }
@@ -51,6 +57,11 @@ public class Process {
         return priority;
     }
 
+    public String color() {
+        return color;
+    }
+
+    // İşlem durumlarını değiştiren metodlar
     public void start(int timer) {
         status = Status.RUNNING;
         System.out.println(timer + ". second. Process started. \t\t" + this);
@@ -77,6 +88,7 @@ public class Process {
         System.out.println(timer + ". second. Process queued. \t\t" + this);
     }
 
+    // Bellek limitleri kontrol eden metodlar
     public boolean tooMuchMemory() {
         if (priority == 0) {
             return resource.getMemory() > MAX_MEMORY_REAL_TIME_PROCESS;
@@ -97,8 +109,8 @@ public class Process {
         }
     }
 
+    // String formatındaki kayıttan bir Process objesi oluşturan metod
     public static Process parse(String record) {
-        // 0, 1, 2, 574, 2, 0, 1, 3
         String[] inputs = record.split(",");
         int startAt = Integer.parseInt(inputs[0].trim());
         int priority = Integer.parseInt(inputs[1].trim());
@@ -112,10 +124,12 @@ public class Process {
         return new Process(pidSequencer.getAndIncrement(), startAt, priority, time, resource);
     }
 
+    // Zamanı azaltan metod
     public void tick() {
         this.elapsedTime--;
     }
 
+    // Equals, hashCode ve toString metotları
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -141,7 +155,7 @@ public class Process {
                 ", priority=" + priority +
                 ", elapsedTime=" + elapsedTime +
                 ", resource=" + resource +
-                ", status=" + status +
+                ", status=" + status + color +
                 '}';
     }
 }

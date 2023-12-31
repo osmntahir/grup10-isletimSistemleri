@@ -9,6 +9,7 @@ public class Resource {
     private final int modem;
     private final int CDDriver;
 
+    // Resource sınıfının yapıcı metodu
     public Resource(int memory, int printer, int scanner, int modem, int CDDriver) {
         this.memory = memory;
         this.printer = printer;
@@ -17,6 +18,7 @@ public class Resource {
         this.CDDriver = CDDriver;
     }
 
+    // Getter metodları
     public int getPrinter() {
         return printer;
     }
@@ -37,6 +39,7 @@ public class Resource {
         return memory;
     }
 
+    // Equals, hashCode ve toString metotları
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

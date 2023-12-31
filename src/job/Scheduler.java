@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class Scheduler {
 
     public static void main(String[] args) {
-        // Reading input file
+        // Input dosyasının okunması
     	String path ="";
     	if(args.length==0)
     	{
@@ -23,64 +23,63 @@ public class Scheduler {
     	{
     		path = args[0];
     	}
-        LinkedList<Process> processes = readProcesses(path);
+        LinkedList<Process> processes = readProcesses(path); // Okunan işlemlerin listeye alınması
 
-        // Process queue
+        // İşlem kuyruğu
         Map<Integer, LinkedList<Process>> processQueue = new HashMap<>();
 
-        // Defining settings
+        // Kaynak tanımlaması ve algoritmalar
         final Resource systemResource = new Resource(1024, 2, 1, 1, 2);
         final FCFS fcfs = new FCFS();
         final RR rr = new RR();
        
-        // Pointer
+        // İşaretçi
         Process ongoing = null;
         int loopTimer = -1;
         while (loopTimer < 1000) {
             loopTimer++;
             final int timer = loopTimer;
 
-            // Welcoming new processes @timer second.
+            // Yeni gelen işlemlerin zamanlayıcıya eklenmesi
             List<Process> arrivedProcesses = processes.stream()
                     .filter(p -> p.startedAt() == timer)
                     .collect(Collectors.toList());
             arrivedProcesses = validate(arrivedProcesses, systemResource);
 
             if (ongoing != null && ongoing.isTimeout(timer)) {
-                System.out.println(ongoing.id() + " - HATA - Proses zaman aşımı (20 sn de tamamlanamadı).");
+                System.out.println("P:"+ongoing.id() + " - HATA - İşlem zaman aşımına uğradı (20 sn içinde tamamlanamadı).");
                 processQueue.get(ongoing.priority()).remove(ongoing);
                 ongoing = null;
                 continue;
             }
 
-            // prioritized process queue constructed with LinkedList.
-            // FCFS is provided by adding newly arrived processes at the end of the list and reading the first process based on its priority
+            // Öncelikli işlem kuyruğu, FCFS algoritmasıyla oluşturuluyor
             fcfs.dispatch(timer, processQueue, arrivedProcesses);
 
-            // GBG is provided by querying from the most prioritized process if exists
+            // GBG algoritması, en öncelikli işlem varsa onu sorguluyor
             Process ongoingProcessCandidate = fcfs.queryForPrioritizedProcess(timer, processQueue);
 
-            // Round-robin is running if the least prioritized queue is left.
+            // Round-robin, en düşük öncelikli kuyruk varsa çalıştırılıyor
             ongoingProcessCandidate = rr.cycle(processQueue, ongoing, ongoingProcessCandidate);
 
-            // Suspension or not.
+            // Askıya alma veya devam etme
             if (ongoing == null && ongoingProcessCandidate != null) {
                 ongoing = ongoingProcessCandidate;
                 ongoing.start(timer);
             } else if (ongoingProcessCandidate != null && !ongoing.equals(ongoingProcessCandidate)) {
-                // Suspending ongoing
+                // Devam eden işlemi askıya alma
                 ongoing.suspend(timer);
                 LinkedList<Process> prioritizedQueue = processQueue.getOrDefault(ongoing.priority(), new LinkedList<>());
                 prioritizedQueue.remove(ongoing);
                 prioritizedQueue.addLast(ongoing);
                 processQueue.put(ongoing.priority(), prioritizedQueue);
 
-                // Starting prioritized process
+                // Öncelikli işlemi başlatma
                 ongoing = ongoingProcessCandidate;
                 ongoing.start(timer);
             }
 
-            // Ticking ongoing process.
+            // Devam eden işlemin ilerlemesi
             if (ongoing != null) {
                 ongoing.tick();
                 if (ongoing.isCompleted(timer)) {
@@ -91,7 +90,7 @@ public class Scheduler {
             
             // Yavaşça yazdırmak için Thread.sleep
             try {
-                Thread.sleep(200); // 100 milisaniye bekleyin
+                Thread.sleep(200); // 100 milisaniye bekle
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -104,21 +103,21 @@ public class Scheduler {
             for (Process process : arrivedProcesses) {
                 if (process.priority() == 0) {
                     if (process.tooMuchMemory()) {
-                        System.out.println(process.id() + " - !! HATA - Gerçek-zamanlı proses (64MB) tan daha fazla bellek talep ediyor - proses silindi.");
+                        System.out.println("P:" + process.id() + " - !! HATA - Gerçek zamanlı işlem (64MB) için fazla bellek talep ediyor - işlem silindi.");
                         continue;
                     }
                     if (process.tooMuchResource(systemResource)) {
-                        System.out.println(process.id() + " - !! HATA - Gerçek-zamanlı proses çok sayıda kaynak talep ediyor - proses silindi.");
+                        System.out.println("P:" + process.id() + " - !! HATA - Gerçek zamanlı işlem çok fazla kaynak talep ediyor - işlem silindi.");
                         continue;
                     }
 
                 } else {
                     if (process.tooMuchMemory()) {
-                        System.out.println(process.id() + " - !! HATA - Proses (960 MB) tan daha fazla bellek talep ediyor – proses silindi");
+                        System.out.println("P:" + process.id() + " - !! HATA - İşlem (960 MB) için fazla bellek talep ediyor – işlem silindi");
                         continue;
                     }
                     if (process.tooMuchResource(systemResource)) {
-                        System.out.println(process.id() + " - !! HATA - Proses çok sayıda kaynak talep ediyor - proses silindi");
+                        System.out.println("P:" + process.id() + " - !! HATA - İşlem çok fazla kaynak talep ediyor - işlem silindi");
                         continue;
                     }
                 }
@@ -134,7 +133,7 @@ public class Scheduler {
         try (BufferedReader bufferedReader = Files.newBufferedReader(Paths.get(processInputResource))) {
             bufferedReader.lines().forEach(processInput -> processes.add(Process.parse(processInput)));
         } catch (IOException e) {
-            throw new RuntimeException("Process input cannot be read.", e);
+            throw new RuntimeException("İşlem girişi okunamadı.", e);
         }
         return processes;
     }
